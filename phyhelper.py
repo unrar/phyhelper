@@ -11,14 +11,14 @@ class ULM:
   def __init__ (self, x, xo, t, to, v):
 
     # Initializate variables
-    self.xo = int(xo) if xo != "?" else Symbol('xo')
-    self.x = int(x) if x != "?" else Symbol('x')
-    self.to = int(to) if to != "?" else Symbol('to')
-    self.t = int(t) if t != "?" else Symbol('t')
-    self.v = int(v) if v != "?" else Symbol('v')
+    self.xo = Float(xo) if xo != "?" else Symbol('xo')
+    self.x = Float(x) if x != "?" else Symbol('x')
+    self.to = Float(to) if to != "?" else Symbol('to')
+    self.t = Float(t) if t != "?" else Symbol('t')
+    self.v = Float(v) if v != "?" else Symbol('v')
 
     # Set the position and speed equations
-    self.position = Eq(self.x,self.v/(self.t-self.to))
+    self.position = Eq(self.x,self.xo + self.v * (self.t-self.to))
     self.speed = Eq(self.v,(self.x-self.xo)/(self.t-self.to))
 
   # Solve the equation
@@ -37,12 +37,14 @@ class ULM:
 
   def find_value (self, what):
     # Try it first with the position equation
-    result = solve(self.position, what)
-    if not result:
-      # Now do it with the speed equation
-      result = solve(self.speed, what)
-    # Return
-    return result
+    r1 = solve(self.position, what)
+    if not r1:
+      r2 = solve(self.speed, what)
+      return r2[0]
+    else:
+      return r1[0]
+    # Beautify the result
+    # return ", ".join(map(str,[r1,r2]))
 
 class UALM:
   ### Set up the known data ###
@@ -99,58 +101,27 @@ if kind == "ULM":
         other = value
         break
       # No luck yet
+    # Now other = another symbol that we can use
+    # EXCEPTION: if there's no "other", it means there
+    # are no more unknown values, so it's a normal equation and we
+    # have to use u.find_value(u.something) instead, so we keep
+    # other as False
 
-  # Now other = another symbol that we can use
-  # EXCEPTION: if there's no "other", it means there
-  # are no more unknown values, so it's a normal equation and we
-  # have to use u.find_value(u.something) instead, so we keep
-  # other as False
-
-  # Is "sym" a real symbol?
-  symreal = False
-  for key in cvars:
-    if sym == key:
-      symreal = True
-  if not symreal:
-    print "The symbol %s doesn't exist!" % sym
-  else:
-    if isinstance(cvars[sym], Symbol):
-      R = u.find_values(cvars[sym], other) if other else u.find_value(cvars[sym])
-      print "Values of %s: %s" % (sym, R)
+    # Is "sym" a real symbol?
+    symreal = False
+    for key in cvars:
+      if sym == key:
+        symreal = True
+    if not symreal:
+      print "The symbol %s doesn't exist!" % sym
     else:
-      print "Value of %s: %s" % (sym, cvars[sym])
-
-"""
-    elif sym == "xo":
-      if isinstance(u.xo, Symbol):
-        R = u.find_values(u.xo, other) if other else u.find_value(u.xo)
-        print "Values of xo: %s" % R
+      if isinstance(cvars[sym], Symbol):
+        R = u.find_values(cvars[sym], other) if other else u.find_value(cvars[sym])
+        print "Values of %s: %s" % (sym, R)
       else:
-        print "Value of xo: %s" % u.xo
-    elif sym == "t":
-      if isinstance(u.t, Symbol):
-        R = u.find_values(u.t, other)
-        print "Values of t: %s" % R
-      else:
-        print "Value of t: %s" % u.t
-    elif sym == "to":
-      if isinstance(u.to, Symbol):
-        R = u.find_values(u.to, other)
-        print "Values of to: %s" % R
-      else:
-        print "Value of to: %s" % u.to
-    elif sym == "v":
-      if isinstance(u.v, Symbol):
-        R = u.find_values(u.v, other)
-        print "Values of v: %s" % R
-      else:
-        print "Value of v: %s" % u.v
-    else:
-      print "Unknown symbol!"
-
+        print "Value of %s: %s" % (sym, cvars[sym])
     # Continue?
     keep = raw_input("Find another symbol? (y/n) ")
     if keep == "n":
       break
-"""
 
